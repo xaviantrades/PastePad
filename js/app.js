@@ -175,7 +175,7 @@ async function startApp() {
     $('title').value = data.title === 'Untitled' ? '' : data.title;
     $('editor').value = data.content;
     updateCount(); setStatus('Opened'); loadHistory();
-    if (innerWidth <= 700) $('side').classList.remove('open');
+    if (innerWidth <= 700) closeHistory();
   }
 
   async function newPaste(){
