@@ -62,7 +62,8 @@ async function startApp() {
     await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
   } catch (error) {
-    setStatus('Library load failed: ' + error.message);
+    const status = $('status');
+    if (status) status.textContent = 'Library load failed: ' + error.message;
     return;
   }
 
