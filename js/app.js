@@ -17,8 +17,8 @@
  */
 
 // CONFIG: paste your values from Supabase → Project Settings → API
-const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
+const SUPABASE_URL = 'https://rinbpazntachmfqmwedo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpbmJwYXpudGFjaG1mcW13ZWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyNjUzMDcsImV4cCI6MjEwMTg0MTMwN30.uD-XwXoUbhKs9sjm0u5qxiv5i4A53tL_eDOgeXpsAT0';
 
 const $ = id => document.getElementById(id);
 
