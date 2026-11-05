@@ -35,20 +35,66 @@ function loadScript(src) {
 function renderApp() {
   const root = $('app');
   root.innerHTML = `
-    <header>
-      <input id="title" placeholder="Title (describe this paste)" aria-label="Title" maxlength="200">
-      <button id="new" type="button">New</button>
-      <button id="copy" type="button">Copy</button>
-      <select id="export" aria-label="Export as">
-        <option value="">Export…</option>
-        <option>txt</option><option>js</option><option>mjs</option><option>html</option><option>css</option>
-        <option>json</option><option>md</option><option>pdf</option><option>doc</option>
-      </select>
-      <button id="hist" type="button">History</button>
+    <header class="app-header">
+      <a class="brand" href="#" aria-label="Pastepad home">Paste<span>pad</span></a>
+      <div class="header-actions">
+        <input id="title" placeholder="Untitled paste" aria-label="Paste title" maxlength="200">
+        <button id="new" type="button">New</button>
+        <button id="copy" type="button">Copy</button>
+        <select id="export" aria-label="Export as">
+          <option value="">Export…</option>
+          <option>txt</option><option>js</option><option>mjs</option><option>html</option><option>css</option>
+          <option>json</option><option>md</option><option>pdf</option><option>doc</option>
+        </select>
+      </div>
+      <nav class="primary-nav" aria-label="Main navigation">
+        <button id="nav-editor" class="nav-button active" type="button">Editor</button>
+        <button id="nav-history" class="nav-button" type="button" aria-expanded="false">History</button>
+        <button id="nav-tools" class="nav-button" type="button">Tools</button>
+      </nav>
     </header>
-    <main>
-      <textarea id="editor" placeholder="Paste or type here…" spellcheck="false" autofocus></textarea>
-      <aside id="side"><h2>History</h2><div id="msg"></div><ul id="list"></ul></aside>
+    <main id="main-view" class="view-editor">
+      <section id="editor-pane" class="editor-pane">
+        <div class="pane-label"><span>EDITOR</span><span class="hint">Your paste is saved automatically</span></div>
+        <textarea id="editor" placeholder="Paste or type here…" spellcheck="false" autofocus></textarea>
+      </section>
+      <section id="tools-pane" class="tools-pane" hidden>
+        <div class="tools-intro"><p class="eyebrow">WORKSPACE UTILITIES</p><h1>Tools</h1><p>Generate secure random strings or calculate a quick result.</p></div>
+        <div class="tool-grid">
+          <article class="tool-card generator-card">
+            <div class="tool-heading"><div class="tool-icon">✳</div><div><h2>Random generator</h2><p>Create passwords, API tokens and random strings.</p></div></div>
+            <label class="field-label" for="generator-preset">Preset</label>
+            <select id="generator-preset" class="full-control"><option value="password">Strong password</option><option value="api">API key (hex)</option><option value="custom">Custom random string</option></select>
+            <label class="field-label" for="generator-length">Length <output id="length-value">24</output></label>
+            <input id="generator-length" class="range-control" type="range" min="8" max="128" value="24">
+            <div class="check-grid">
+              <label><input id="use-upper" type="checkbox" checked> Uppercase</label>
+              <label><input id="use-lower" type="checkbox" checked> Lowercase</label>
+              <label><input id="use-digits" type="checkbox" checked> Numbers</label>
+              <label><input id="use-symbols" type="checkbox" checked> Symbols</label>
+            </div>
+            <div class="result-wrap"><input id="generator-result" type="text" readonly placeholder="Your generated value appears here"><button id="copy-generated" type="button" class="icon-button" aria-label="Copy generated value">Copy</button></div>
+            <button id="generate" class="primary-button" type="button">Generate securely ↗</button>
+            <p class="tool-note">Generated in your browser using the Web Crypto API. Nothing is sent to the server.</p>
+          </article>
+          <article class="tool-card calculator-card">
+            <div class="tool-heading"><div class="tool-icon">＋</div><div><h2>Calculator</h2><p>Quick arithmetic with keyboard support.</p></div></div>
+            <input id="calc-display" class="calc-display" type="text" inputmode="decimal" placeholder="0" aria-label="Calculator display">
+            <div class="calc-keys">
+              <button data-calc="clear" class="key-muted" type="button">AC</button><button data-calc="back" class="key-muted" type="button">⌫</button><button data-calc="(" type="button">(</button><button data-calc=")" type="button">)</button>
+              <button data-calc="7" type="button">7</button><button data-calc="8" type="button">8</button><button data-calc="9" type="button">9</button><button data-calc="/" class="key-operator" type="button">÷</button>
+              <button data-calc="4" type="button">4</button><button data-calc="5" type="button">5</button><button data-calc="6" type="button">6</button><button data-calc="*" class="key-operator" type="button">×</button>
+              <button data-calc="1" type="button">1</button><button data-calc="2" type="button">2</button><button data-calc="3" type="button">3</button><button data-calc="-" class="key-operator" type="button">−</button>
+              <button data-calc="0" type="button">0</button><button data-calc="." type="button">.</button><button data-calc="=" class="key-equals" type="button">=</button><button data-calc="+" class="key-operator" type="button">+</button>
+            </div>
+          </article>
+        </div>
+      </section>
+      <aside id="side" class="history-drawer" aria-label="Paste history" aria-hidden="true">
+        <div class="history-head"><div><p class="eyebrow">YOUR LIBRARY</p><h2>History</h2></div><button id="close-history" class="close-button" type="button" aria-label="Close history">✕</button></div>
+        <div id="msg" class="history-message"></div><ul id="list"></ul>
+      </aside>
+      <button id="drawer-backdrop" class="drawer-backdrop" type="button" aria-label="Close history"></button>
     </main>
     <footer><span id="status">Ready</span><span id="count">0 chars</span></footer>
   `;
@@ -129,7 +175,7 @@ async function startApp() {
     $('title').value = data.title === 'Untitled' ? '' : data.title;
     $('editor').value = data.content;
     updateCount(); setStatus('Opened'); loadHistory();
-    if (innerWidth <= 700) $('side').classList.remove('open');
+    if (innerWidth <= 700) closeHistory();
   }
 
   async function newPaste(){
@@ -179,6 +225,100 @@ async function startApp() {
     setStatus('Exported .' + ext);
   }
 
+
+  function switchView(view) {
+    const tools = view === 'tools';
+    $('editor-pane').hidden = tools;
+    $('tools-pane').hidden = !tools;
+    $('main-view').classList.toggle('view-tools', tools);
+    $('main-view').classList.toggle('view-editor', !tools);
+    $('nav-editor').classList.toggle('active', view === 'editor');
+    $('nav-tools').classList.toggle('active', tools);
+    if (view !== 'history') closeHistory();
+    if (!tools && view === 'editor') $('editor').focus();
+  }
+
+  function openHistory() {
+    $('side').classList.add('open');
+    $('side').setAttribute('aria-hidden', 'false');
+    $('drawer-backdrop').classList.add('visible');
+    $('nav-history').classList.add('active');
+    $('nav-history').setAttribute('aria-expanded', 'true');
+    loadHistory();
+  }
+  function closeHistory() {
+    $('side').classList.remove('open');
+    $('side').setAttribute('aria-hidden', 'true');
+    $('drawer-backdrop').classList.remove('visible');
+    $('nav-history').classList.remove('active');
+    $('nav-history').setAttribute('aria-expanded', 'false');
+  }
+
+  function secureRandomIndex(max) {
+    const range = 0x100000000, limit = range - (range % max);
+    const value = new Uint32Array(1);
+    do { crypto.getRandomValues(value); } while (value[0] >= limit);
+    return value[0] % max;
+  }
+  function generateRandom() {
+    const preset = $('generator-preset').value;
+    const length = Number($('generator-length').value);
+    let alphabet = '';
+    if (preset === 'api') alphabet = '0123456789abcdef';
+    else {
+      if ($('use-upper').checked) alphabet += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      if ($('use-lower').checked) alphabet += 'abcdefghijklmnopqrstuvwxyz';
+      if ($('use-digits').checked) alphabet += '0123456789';
+      if ($('use-symbols').checked) alphabet += '!@#$%^&*()-_=+[]{}:,.?';
+    }
+    if (!alphabet) { setStatus('Select at least one character set'); return; }
+    let result = '';
+    for (let i = 0; i < length; i++) result += alphabet[secureRandomIndex(alphabet.length)];
+    $('generator-result').value = result;
+    setStatus('Secure random value generated');
+  }
+
+  function evaluateExpression(source) {
+    const tokens = source.match(/(?:\d+(?:\.\d*)?|\.\d+)|[()+*/-]/g) || [];
+    if (tokens.join('') !== source.replace(/\s+/g, '')) throw new Error('Invalid expression');
+    let i = 0;
+    function primary() {
+      const t = tokens[i++];
+      if (t === '+') return primary();
+      if (t === '-') return -primary();
+      if (t === '(') { const v = expression(); if (tokens[i++] !== ')') throw new Error('Missing )'); return v; }
+      const n = Number(t);
+      if (!t || !Number.isFinite(n)) throw new Error('Invalid number');
+      return n;
+    }
+    function term() {
+      let v = primary();
+      while (tokens[i] === '*' || tokens[i] === '/') {
+        const op = tokens[i++], rhs = primary();
+        if (op === '/' && rhs === 0) throw new Error('Cannot divide by zero');
+        v = op === '*' ? v * rhs : v / rhs;
+      }
+      return v;
+    }
+    function expression() {
+      let v = term();
+      while (tokens[i] === '+' || tokens[i] === '-') {
+        const op = tokens[i++], rhs = term();
+        v = op === '+' ? v + rhs : v - rhs;
+      }
+      return v;
+    }
+    if (!tokens.length) throw new Error('Enter a calculation');
+    const result = expression();
+    if (i !== tokens.length || !Number.isFinite(result)) throw new Error('Invalid calculation');
+    return Number(result.toPrecision(12)).toString();
+  }
+  function calculate() {
+    const display = $('calc-display');
+    try { display.value = evaluateExpression(display.value); }
+    catch (e) { setStatus(e.message); }
+  }
+
   // Events
   $('editor').addEventListener('input', queueSave);
   $('title').addEventListener('input', queueSave);
@@ -186,7 +326,38 @@ async function startApp() {
     if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '  '); }
   });
   $('new').onclick = newPaste;
-  $('hist').onclick = () => { $('side').classList.toggle('open'); if ($('side').classList.contains('open')) loadHistory(); };
+  $('nav-editor').onclick = () => switchView('editor');
+  $('nav-tools').onclick = () => switchView('tools');
+  $('nav-history').onclick = () => { if ($('side').classList.contains('open')) closeHistory(); else openHistory(); };
+  $('close-history').onclick = closeHistory;
+  $('drawer-backdrop').onclick = closeHistory;
+  $('generate').onclick = generateRandom;
+  $('generator-length').addEventListener('input', e => $('length-value').textContent = e.target.value);
+  $('generator-preset').addEventListener('change', e => {
+    const api = e.target.value === 'api';
+    ['use-upper','use-lower','use-digits','use-symbols'].forEach(id => $(id).disabled = api);
+    if (api) $('generator-length').value = 64;
+    else if ($('generator-length').value === '64') $('generator-length').value = 24;
+    $('length-value').textContent = $('generator-length').value;
+  });
+  $('copy-generated').onclick = async () => {
+    const value = $('generator-result').value;
+    if (!value) { setStatus('Generate a value first'); return; }
+    try { await navigator.clipboard.writeText(value); setStatus('Generated value copied'); }
+    catch { $('generator-result').select(); document.execCommand('copy'); setStatus('Generated value copied'); }
+  };
+  $('calc-display').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); calculate(); } });
+  document.querySelector('.calc-keys').addEventListener('click', e => {
+    const key = e.target.closest('[data-calc]')?.dataset.calc;
+    if (!key) return;
+    const display = $('calc-display');
+    if (key === 'clear') display.value = '';
+    else if (key === 'back') display.value = display.value.slice(0, -1);
+    else if (key === '=') calculate();
+    else display.value += key;
+    display.focus();
+  });
+
   $('copy').onclick = async () => {
     try { await navigator.clipboard.writeText($('editor').value); setStatus('Copied'); }
     catch { $('editor').select(); document.execCommand('copy'); setStatus('Copied'); }
@@ -203,7 +374,7 @@ async function startApp() {
   addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   if (!configured) setStatus('Add your Supabase URL and key to save');
-  if (innerWidth > 700) $('side').classList.add('open');
+  closeHistory();
   loadHistory(); updateCount();
 }
 
