@@ -165,14 +165,14 @@ async function startApp() {
       const margin = 48, w = pdf.internal.pageSize.getWidth() - margin * 2, h = pdf.internal.pageSize.getHeight() - margin;
       pdf.setFont('courier', 'normal'); pdf.setFontSize(10);
       let y = margin;
-      for (const line of pdf.splitTextToSize(text.replace(/\\t/g, '  '), w)) {
+      for (const line of pdf.splitTextToSize(text.replace(/\t/g, '  '), w)) {
         if (y > h) { pdf.addPage(); y = margin; }
         pdf.text(line, margin, y); y += 13;
       }
       pdf.save(base + '.pdf');
     } else if (ext === 'doc') {
       const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(base)}</title></head><body><pre style="font-family:Consolas,monospace;font-size:10pt;white-space:pre-wrap">${esc(text)}</pre></body></html>`;
-      download(new Blob(['\\ufeff', html], { type: 'application/msword' }), base + '.doc');
+      download(new Blob([String.fromCharCode(0xFEFF), html], { type: 'application/msword' }), base + '.doc');
     } else {
       download(new Blob([text], { type: (MIME[ext] || 'text/plain') + ';charset=utf-8' }), base + '.' + ext);
     }
